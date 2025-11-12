@@ -4,11 +4,19 @@ export const createRouter = () => {
   const { notify, subscribe } = createObserver();
 
   const push = (path) => {
+    const basePath = import.meta.env.BASE_URL; // ex: '/front_7th_chapter2-1/'
     const prevPath = window.location.pathname;
-    const nextUrl = new URL(path, window.location.origin);
 
-    history.pushState(null, "", path);
-    const isQueryOnly = prevPath === nextUrl.pathname;
+    const relativePrevPath = prevPath.replace(basePath, "/").replace(/\/$/, "") || "/";
+
+    const fullPath = path.startsWith("/") ? basePath.replace(/\/$/, "") + path : basePath + path;
+
+    const nextUrl = new URL(fullPath, window.location.origin);
+    const relativeNextPath = nextUrl.pathname.replace(basePath, "/").replace(/\/$/, "") || "/";
+
+    history.pushState(null, "", fullPath);
+
+    const isQueryOnly = relativePrevPath === relativeNextPath;
 
     notify({ isQueryOnly });
   };
@@ -24,7 +32,8 @@ export const createRouter = () => {
   };
   return {
     get path() {
-      return window.location.pathname;
+      const basePath = import.meta.env.BASE_URL; // vite 제공
+      return window.location.pathname.replace(basePath, "/").replace(/\/$/, "") || "/";
     },
     push,
     setup,

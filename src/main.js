@@ -8,6 +8,10 @@ const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
     worker.start({
       onUnhandledRequest: "bypass",
+      serviceWorker: {
+        // 여기
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+      },
     }),
   );
 
@@ -107,6 +111,7 @@ const loadCategories = async () => {
 const render = async ({ isQueryOnly = false } = {}) => {
   syncStateFromUrl();
   const path = router.path;
+  console.log(path);
   if (path === "/") {
     if (!isQueryOnly) {
       await HomePage(); // 전체 렌더
