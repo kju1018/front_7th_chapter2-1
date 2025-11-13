@@ -38,6 +38,7 @@ export const initialState = {
     images: [],
   },
   relatedProducts: [],
+  quantity: 1, // 상품 수량
 };
 
 export const store = createStore(initialState);

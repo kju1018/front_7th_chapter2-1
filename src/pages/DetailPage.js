@@ -5,7 +5,7 @@ export const DetailPage = () => {
   const $root = document.querySelector("#root");
 
   const render = () => {
-    const { loading, product, relatedProducts } = store.state;
+    const { loading, product, relatedProducts, quantity } = store.state;
     $root.innerHTML = PageLayout();
     const $mainContentView = document.querySelector("#main-content-view");
 
@@ -102,7 +102,7 @@ export const DetailPage = () => {
                 <input
                   type="number"
                   id="quantity-input"
-                  value="1"
+                  value="${quantity}"
                   min="1"
                   max="${product.stock}"
                   class="w-16 h-8 text-center text-sm border-t border-b border-gray-300 

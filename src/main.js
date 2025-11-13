@@ -92,6 +92,22 @@ document.body.addEventListener("click", (e) => {
     const queryString = params.toString();
     router.push(queryString ? `/?${queryString}` : "/");
   }
+
+  // 수량 감소 버튼
+  if (e.target.closest("#quantity-decrease")) {
+    const currentQuantity = store.state.quantity;
+    if (currentQuantity > 1) {
+      store.setState({ quantity: currentQuantity - 1 });
+    }
+  }
+
+  // 수량 증가 버튼
+  if (e.target.closest("#quantity-increase")) {
+    const { quantity, product } = store.state;
+    if (quantity < product.stock) {
+      store.setState({ quantity: quantity + 1 });
+    }
+  }
 });
 
 document.body.addEventListener("change", (e) => {
@@ -112,6 +128,21 @@ document.body.addEventListener("change", (e) => {
     const params = new URLSearchParams(window.location.search);
     params.set("sort", sort);
     pushWithParams(params);
+  }
+});
+
+// 수량 입력 이벤트
+document.body.addEventListener("input", (e) => {
+  if (e.target.id === "quantity-input") {
+    const newQuantity = parseInt(e.target.value) || 1;
+    store.setState({ quantity: newQuantity });
+  }
+});
+
+document.body.addEventListener("change", (e) => {
+  if (e.target.id === "quantity-input") {
+    const newQuantity = parseInt(e.target.value) || 1;
+    store.setState({ quantity: newQuantity });
   }
 });
 
@@ -342,6 +373,8 @@ const render = async ({ isQueryOnly = false } = {}) => {
     if (!isQueryOnly) {
       // 모든 이전 구독 해제
       store.clearObservers();
+      // 수량 초기화
+      store.setState({ quantity: 1 });
       await HomePage(); // 전체 렌더
       await loadCategories();
       await loadProducts(); // page=1로 초기 로드
@@ -364,6 +397,8 @@ const render = async ({ isQueryOnly = false } = {}) => {
     // productId가 바뀌었으면 항상 다시 로딩
     if (prevId !== productId) {
       store.clearObservers();
+      // 수량 초기화
+      store.setState({ quantity: 1 });
       loadProductDetail(productId);
     }
 
