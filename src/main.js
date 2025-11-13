@@ -2,6 +2,7 @@ import { router } from "./router.js";
 import { store } from "./store/store.js";
 import { HomePage } from "./pages/HomePage.js";
 import { DetailPage } from "./pages/DetailPage.js";
+import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { getProducts, getCategories, getProduct } from "./api/productApi";
 import { cartStorage } from "./utils/cartStorage.js";
 import Toast from "./components/Toast.js";
@@ -597,6 +598,10 @@ const render = async ({ isQueryOnly = false } = {}) => {
     }
 
     DetailPage();
+  } else {
+    // 404 페이지 - 존재하지 않는 경로
+    store.clearObservers();
+    NotFoundPage();
   }
 };
 
