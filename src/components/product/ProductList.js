@@ -48,19 +48,10 @@ export const ProductList = () => {
   const render = () => {
     const { loading, products, pagination } = store.state;
     const { total } = pagination;
-    if (loading) {
-      $el.innerHTML = /* HTML */ `
-        <!-- 상품 그리드 -->
-        <div class="mb-6" id="product-list-container">
-          <div class="grid grid-cols-2 gap-4 mb-6" id="products-grid">
-            <!-- 로딩 스켈레톤 -->
-            ${Skeleton.repeat(4)}
-          </div>
-        </div>
+    const loadedCount = products.length;
+    const hasMore = loadedCount < total;
 
-        ${Loading()}
-      `;
-    } else if (products.length === 0) {
+    if (!loading && products.length === 0) {
       $el.innerHTML = /* HTML */ `
         <!-- 상품 없음 -->
         <div class="mb-6" id="product-list-container">${NoProducts()}</div>
@@ -69,11 +60,19 @@ export const ProductList = () => {
       $el.innerHTML = /* HTML */ `
         <!-- 상품 개수 정보 -->
         <div class="mb-6" id="product-list-container">
-          <div class="mb-4 text-sm text-gray-600">
+          ${loadedCount > 0
+            ? `<div class="mb-4 text-sm text-gray-600">
             총 <span class="font-medium text-gray-900">${total}개</span>의 상품
+          </div>`
+            : ""}
+          <div class="grid grid-cols-2 gap-4 mb-6" id="products-grid">
+            ${products.map(ProductItem).join("")} ${loading ? Skeleton.repeat(6) : ""}
           </div>
-          <div class="grid grid-cols-2 gap-4 mb-6" id="products-grid">${products.map(ProductItem).join("")}</div>
-          <div class="text-center py-4 text-sm text-gray-500">모든 상품을 확인했습니다</div>
+          <div id="scroll-trigger" class="h-4"></div>
+          ${loading ? Loading() : ""}
+          ${!loading && !hasMore
+            ? '<div class="text-center py-4 text-sm text-gray-500">모든 상품을 확인했습니다</div>'
+            : ""}
         </div>
       `;
     }
