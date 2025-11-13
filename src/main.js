@@ -6,6 +6,7 @@ import { getProducts, getCategories, getProduct } from "./api/productApi";
 import { cartStorage } from "./utils/cartStorage.js";
 import Toast from "./components/Toast.js";
 import { Header } from "./components/Header.js";
+import Cart from "./components/cart/cart.js";
 
 const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
@@ -171,9 +172,130 @@ document.body.addEventListener("click", (e) => {
     }
     return;
   }
+
+  // 장바구니 아이콘 버튼 클릭
+  if (e.target.closest("#cart-icon-btn")) {
+    openCartModal();
+    return;
+  }
+
+  // 장바구니 모달 닫기 버튼
+  if (e.target.closest("#cart-modal-close-btn")) {
+    closeCartModal();
+    return;
+  }
+
+  // 모달 오버레이 클릭 시 닫기
+  if (e.target.classList.contains("cart-modal-overlay")) {
+    closeCartModal();
+    return;
+  }
+
+  // 장바구니 수량 감소 버튼
+  if (e.target.closest(".cart-quantity-decrease-btn")) {
+    const productId = e.target.closest(".cart-quantity-decrease-btn").dataset.productId;
+    const cart = cartStorage.getCart();
+    const item = cart.items.find((item) => item.id === productId);
+
+    if (item && item.quantity > 1) {
+      cartStorage.updateQuantity(productId, item.quantity - 1);
+      updateCartModal();
+      updateHeader();
+    }
+    return;
+  }
+
+  // 장바구니 수량 증가 버튼
+  if (e.target.closest(".quantity-increase-btn")) {
+    const productId = e.target.closest(".quantity-increase-btn").dataset.productId;
+    const cart = cartStorage.getCart();
+    const item = cart.items.find((item) => item.id === productId);
+
+    if (item) {
+      cartStorage.updateQuantity(productId, item.quantity + 1);
+      updateCartModal();
+      updateHeader();
+    }
+    return;
+  }
+
+  // 장바구니 개별 상품 체크박스
+  if (e.target.classList.contains("cart-item-checkbox")) {
+    const productId = e.target.dataset.productId;
+    const isChecked = e.target.checked;
+
+    cartStorage.updateItemSelected(productId, isChecked);
+
+    // 모든 아이템이 선택되었는지 확인
+    const cart = cartStorage.getCart();
+    const items = cart.items || [];
+    const allSelected = items.length > 0 && items.every((item) => item.selected);
+
+    // 모든 아이템이 선택되었으면 전체 선택 체크박스도 체크
+    if (allSelected) {
+      cartStorage.setSelectedAll(true);
+    } else {
+      cartStorage.setSelectedAll(false);
+    }
+
+    updateCartModal();
+    return;
+  }
+
+  // 장바구니 전체 선택 체크박스
+  if (e.target.id === "cart-modal-select-all-checkbox") {
+    const isChecked = e.target.checked;
+
+    cartStorage.toggleSelectAll(isChecked);
+    updateCartModal();
+    return;
+  }
+
+  // 선택한 상품 삭제 버튼
+  if (e.target.id === "cart-modal-remove-selected-btn") {
+    cartStorage.removeSelectedItems();
+    updateCartModal();
+    updateHeader();
+    return;
+  }
+
+  // 전체 비우기 버튼
+  if (e.target.id === "cart-modal-clear-cart-btn") {
+    cartStorage.clearCart();
+    updateCartModal();
+    updateHeader();
+    showToast("info");
+    return;
+  }
+
+  // 구매하기 버튼
+  if (e.target.id === "cart-modal-checkout-btn") {
+    showToast("info", "구매 기능은 추후 구현 예정입니다.");
+    return;
+  }
 });
 
 document.body.addEventListener("change", (e) => {
+  // 장바구니 수량 직접 입력
+  if (e.target.classList.contains("cart-quantity-input")) {
+    const productId = e.target.dataset.productId;
+    const newQuantity = parseInt(e.target.value) || 1;
+
+    if (newQuantity >= 1) {
+      cartStorage.updateQuantity(productId, newQuantity);
+      updateCartModal();
+      updateHeader();
+    } else {
+      // 유효하지 않은 값이면 원래 값으로 복원
+      const cart = cartStorage.getCart();
+      const item = cart.items.find((item) => item.id === productId);
+      if (item) {
+        e.target.value = item.quantity;
+      }
+    }
+    return;
+  }
+
   // limit 선택 이벤트
   if (e.target.id === "limit-select") {
     const limit = parseInt(e.target.value);
@@ -210,6 +332,15 @@ document.body.addEventListener("change", (e) => {
 });
 
 document.body.addEventListener("keydown", (e) => {
+  // ESC 키로 장바구니 모달 닫기
+  if (e.key === "Escape") {
+    const cartModal = document.querySelector(".cart-modal");
+    if (cartModal) {
+      closeCartModal();
+      return;
+    }
+  }
+
   const input = e.target.closest("#search-input");
   if (!input) return;
 
@@ -491,8 +622,54 @@ function updateHeader() {
   }
 }
 
+// 장바구니 모달 열기
+// 장바구니 모달 열기
+function openCartModal() {
+  // 이미 모달이 열려있으면 닫기
+  const existingModal = document.querySelector(".cart-modal");
+  if (existingModal) {
+    closeCartModal();
+    return;
+  }
+
+  // 모달 생성 (Cart 컴포넌트가 전체 구조를 반환)
+  const modalContainer = document.createElement("div");
+  modalContainer.innerHTML = Cart();
+  const modal = modalContainer.firstElementChild;
+
+  // #root 안에 추가
+  const root = document.querySelector("#root");
+  if (root) {
+    root.appendChild(modal);
+  } else {
+    document.body.appendChild(modal);
+  }
+
+  document.body.style.overflow = "hidden"; // 배경 스크롤 방지
+}
+
+// 장바구니 모달 닫기
+function closeCartModal() {
+  const modal = document.querySelector(".cart-modal");
+  if (modal) {
+    modal.remove();
+    document.body.style.overflow = ""; // 스크롤 복원
+  }
+}
+
+// 장바구니 모달 다시 렌더링
+function updateCartModal() {
+  const modal = document.querySelector(".cart-modal");
+  if (modal) {
+    const modalContainer = document.createElement("div");
+    modalContainer.innerHTML = Cart();
+    const newModal = modalContainer.firstElementChild;
+    modal.replaceWith(newModal);
+  }
+}
+
 // 토스트 메시지 표시 함수
-function showToast(type = "success") {
+function showToast(type = "success", message = null) {
   const toastContainer = document.createElement("div");
   toastContainer.id = "toast-container";
   toastContainer.className = "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50";
@@ -500,11 +677,11 @@ function showToast(type = "success") {
   let toastHTML = "";
 
   if (type === "success") {
-    toastHTML = Toast("success");
+    toastHTML = Toast("success", message);
   } else if (type === "info") {
-    toastHTML = Toast("info");
+    toastHTML = Toast("info", message);
   } else if (type === "error") {
-    toastHTML = Toast("error");
+    toastHTML = Toast("error", message);
   }
 
   toastContainer.innerHTML = toastHTML;

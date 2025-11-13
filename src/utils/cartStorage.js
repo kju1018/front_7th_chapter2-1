@@ -9,7 +9,7 @@ export const cartStorage = {
     // 기본값 반환
     return {
       items: [],
-      selectedAll: true,
+      selectedAll: false,
     };
   },
 
@@ -52,6 +52,62 @@ export const cartStorage = {
     cart.items = items;
     this.saveCart(cart);
     return items;
+  },
+
+  // 상품 수량 업데이트
+  updateQuantity(id, quantity) {
+    const cart = this.getCart();
+    const items = cart.items || [];
+    const item = items.find((item) => item.id === id);
+
+    if (item && quantity >= 1) {
+      item.quantity = quantity;
+      cart.items = items;
+      this.saveCart(cart);
+    }
+
+    return items;
+  },
+
+  // 개별 상품 선택 상태 업데이트
+  updateItemSelected(id, selected) {
+    const cart = this.getCart();
+    const items = cart.items || [];
+    const item = items.find((item) => item.id === id);
+
+    if (item) {
+      item.selected = selected;
+      cart.items = items;
+      this.saveCart(cart);
+    }
+
+    return items;
+  },
+
+  // 전체 선택/해제
+  toggleSelectAll(selected) {
+    const cart = this.getCart();
+    const items = cart.items || [];
+
+    items.forEach((item) => {
+      item.selected = selected;
+    });
+
+    cart.items = items;
+    cart.selectedAll = selected;
+    this.saveCart(cart);
+
+    return items;
+  },
+
+  // 선택한 상품들 제거
+  removeSelectedItems() {
+    const cart = this.getCart();
+    const items = cart.items || [];
+    const filteredItems = items.filter((item) => !item.selected);
+    cart.items = filteredItems;
+    this.saveCart(cart);
+    return filteredItems;
   },
 
   // 상품 제거
