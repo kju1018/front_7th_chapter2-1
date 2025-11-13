@@ -278,7 +278,17 @@ document.body.addEventListener("click", (e) => {
 
   // 에러 페이지 다시 시도 버튼
   if (e.target.id === "retry-btn") {
-    loadProducts();
+    // 카테고리 에러가 있으면 카테고리부터 다시 로드
+    if (store.state.categoryError) {
+      loadCategories().then(() => {
+        // 카테고리 로드 성공 후 상품 목록 로드
+        if (!store.state.categoryError) {
+          loadProducts();
+        }
+      });
+    } else {
+      loadProducts();
+    }
     return;
   }
 });
@@ -417,6 +427,11 @@ function syncStateFromUrl() {
 }
 
 const loadProducts = async () => {
+  // 카테고리 에러가 있으면 상품 목록을 로드하지 않음
+  if (store.state.categoryError) {
+    return;
+  }
+
   const { category1, category2, search, pagination, sort } = store.state;
   const filters = {
     page: pagination.page,
@@ -458,9 +473,10 @@ const loadProducts = async () => {
 const loadCategories = async () => {
   try {
     const response = await getCategories();
-    store.setState({ categories: response });
+    store.setState({ categories: response, categoryError: false });
   } catch (error) {
     console.error("카테고리 로드 실패:", error);
+    store.setState({ categoryError: true });
 
     // product-list-container에 에러 페이지 렌더링
     const productListContainer = document.querySelector("#product-list-container");

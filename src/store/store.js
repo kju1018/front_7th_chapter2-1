@@ -39,6 +39,7 @@ export const initialState = {
   },
   relatedProducts: [],
   quantity: 1, // 상품 수량
+  categoryError: false, // 카테고리 에러 상태
 };
 
 export const store = createStore(initialState);
