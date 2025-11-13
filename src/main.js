@@ -59,6 +59,39 @@ document.body.addEventListener("click", (e) => {
     params.delete("category2");
     pushWithParams(params);
   }
+
+  // 상세페이지 breadcrumb-link 클릭 (category1 또는 category2)
+  if (e.target.closest(".breadcrumb-link")) {
+    const category1 = store.state.product.category1;
+    const category2 = store.state.product.category2;
+
+    params.set("current", 1); // 페이지 초기화
+    if (category1) {
+      params.set("category1", category1);
+      if (!category2) {
+        params.delete("category2"); // category1만 있으면 category2 제거
+      } else {
+        params.set("category2", category2);
+      }
+    }
+    router.push(`?${params.toString()}`);
+  }
+
+  // "상품 목록으로 돌아가기" 버튼 클릭
+  if (e.target.closest(".go-to-product-list")) {
+    const { product } = store.state;
+    const params = new URLSearchParams();
+
+    if (product.category1) {
+      params.set("category1", product.category1);
+    }
+    if (product.category2) {
+      params.set("category2", product.category2);
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `/?${queryString}` : "/");
+  }
 });
 
 document.body.addEventListener("change", (e) => {
@@ -304,9 +337,11 @@ const render = async ({ isQueryOnly = false } = {}) => {
 
   syncStateFromUrl();
   const path = router.path;
-  console.log(path);
+
   if (path === "/") {
     if (!isQueryOnly) {
+      // 모든 이전 구독 해제
+      store.clearObservers();
       await HomePage(); // 전체 렌더
       await loadCategories();
       await loadProducts(); // page=1로 초기 로드
@@ -322,13 +357,17 @@ const render = async ({ isQueryOnly = false } = {}) => {
       setupInfiniteScroll();
     }, 0);
   } else if (path.startsWith("/product/")) {
-    const productId = path.split("/")[2]; // /product/123 → 123
+    const productId = path.split("/")[2];
 
-    if (!isQueryOnly) {
+    const prevId = store.state.product?.productId;
+
+    // productId가 바뀌었으면 항상 다시 로딩
+    if (prevId !== productId) {
+      store.clearObservers();
       loadProductDetail(productId);
     }
 
-    DetailPage({ loading: store.state.loading, product: store.state.product });
+    DetailPage();
   }
 };
 

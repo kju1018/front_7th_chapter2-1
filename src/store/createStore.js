@@ -1,6 +1,6 @@
 import { createObserver } from "../createObserver";
 export const createStore = (initialState) => {
-  const { notify, subscribe } = createObserver();
+  const { notify, subscribe, clearObservers } = createObserver();
   let state = initialState;
 
   const setState = (partial) => {
@@ -14,5 +14,6 @@ export const createStore = (initialState) => {
     },
     subscribe,
     setState,
+    clearObservers,
   };
 };

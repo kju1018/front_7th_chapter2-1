@@ -13,8 +13,14 @@ export const createObserver = () => {
     observers.forEach((callback) => callback(payload));
   };
 
+  // 모든 구독자 제거
+  const clearObservers = () => {
+    observers.clear();
+  };
+
   return {
     subscribe,
     notify,
+    clearObservers,
   };
 };
