@@ -3,6 +3,7 @@ import { store } from "./store/store.js";
 import { HomePage } from "./pages/HomePage.js";
 import { DetailPage } from "./pages/DetailPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
+import ErrorPage from "./pages/ErrorPage.js";
 import { getProducts, getCategories, getProduct } from "./api/productApi";
 import { cartStorage } from "./utils/cartStorage.js";
 import Toast from "./components/Toast.js";
@@ -274,6 +275,12 @@ document.body.addEventListener("click", (e) => {
     showToast("info", "구매 기능은 추후 구현 예정입니다.");
     return;
   }
+
+  // 에러 페이지 다시 시도 버튼
+  if (e.target.id === "retry-btn") {
+    loadProducts();
+    return;
+  }
 });
 
 document.body.addEventListener("change", (e) => {
@@ -421,25 +428,46 @@ const loadProducts = async () => {
   };
 
   store.setState({ loading: true });
-  const response = await getProducts(filters);
+  try {
+    const response = await getProducts(filters);
 
-  // page가 1이면 상품을 새로 로드, 아니면 기존 상품에 추가
-  const products = pagination.page === 1 ? response.products : [...store.state.products, ...response.products];
+    // page가 1이면 상품을 새로 로드, 아니면 기존 상품에 추가
+    const products = pagination.page === 1 ? response.products : [...store.state.products, ...response.products];
 
-  store.setState({
-    products,
-    pagination: {
-      ...pagination,
-      page: pagination.page,
-      total: response.pagination.total,
-    },
-    loading: false,
-  });
+    store.setState({
+      products,
+      pagination: {
+        ...pagination,
+        page: pagination.page,
+        total: response.pagination.total,
+      },
+      loading: false,
+    });
+  } catch (error) {
+    console.error("상품 목록 로드 실패:", error);
+    store.setState({ loading: false });
+
+    // product-list-container에 에러 페이지 렌더링
+    const productListContainer = document.querySelector("#product-list-container");
+    if (productListContainer) {
+      productListContainer.innerHTML = ErrorPage("productListError");
+    }
+  }
 };
 
 const loadCategories = async () => {
-  const response = await getCategories();
-  store.setState({ categories: response });
+  try {
+    const response = await getCategories();
+    store.setState({ categories: response });
+  } catch (error) {
+    console.error("카테고리 로드 실패:", error);
+
+    // product-list-container에 에러 페이지 렌더링
+    const productListContainer = document.querySelector("#product-list-container");
+    if (productListContainer) {
+      productListContainer.innerHTML = ErrorPage("productListError");
+    }
+  }
 };
 
 // 상품 상세 정보 로드
@@ -467,6 +495,12 @@ const loadProductDetail = async (productId) => {
   } catch (error) {
     console.error("상품 로드 실패:", error);
     store.setState({ loading: false });
+
+    // main-content-view에 에러 페이지 렌더링
+    const mainContentView = document.querySelector("#main-content-view");
+    if (mainContentView) {
+      mainContentView.innerHTML = ErrorPage("productDetailError");
+    }
   }
 };
 
