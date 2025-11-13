@@ -8,7 +8,7 @@ import { getProducts, getCategories, getProduct } from "./api/productApi";
 import { cartStorage } from "./utils/cartStorage.js";
 import Toast from "./components/Toast.js";
 import { Header } from "./components/Header.js";
-import Cart from "./components/cart/cart.js";
+import Cart from "./components/cart/Cart.js";
 
 const enableMocking = () =>
   import("./mocks/browser.js").then(({ worker }) =>
