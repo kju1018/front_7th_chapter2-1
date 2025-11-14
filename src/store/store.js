@@ -1,11 +1,12 @@
 import { createStore } from "./createStore";
+import { DEFAULT_SORT } from "../utils/constants.js";
 
 const params = new URLSearchParams(location.search);
 const category1 = params.get("category1");
 const category2 = params.get("category2");
 const search = params.get("search");
 const limit = parseInt(params.get("limit")) || 20;
-const sort = params.get("sort") || "price_asc";
+const sort = params.get("sort") || DEFAULT_SORT;
 
 export const initialState = {
   search: search || "",
