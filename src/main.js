@@ -267,6 +267,7 @@ document.body.addEventListener("click", (e) => {
     cartStorage.removeSelectedItems();
     updateCartModal();
     updateHeader();
+    showToast("info", "선택된 상품들이 삭제되었습니다");
     return;
   }
 
@@ -752,9 +753,18 @@ function showToast(type = "success", message = null) {
   document.body.appendChild(toastContainer);
 
   // 3초 후 토스트 제거
-  setTimeout(() => {
+  const toastTimer = setTimeout(() => {
     toastContainer.remove();
   }, 3000);
+
+  // X 버튼 클릭 시 토스트 제거
+  const closeBtn = toastContainer.querySelector("#toast-close-btn");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      clearTimeout(toastTimer);
+      toastContainer.remove();
+    });
+  }
 }
 
 // 애플리케이션 시작
