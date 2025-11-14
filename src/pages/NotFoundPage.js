@@ -55,7 +55,7 @@ export const NotFoundPage = () => {
       </svg>
 
       <a
-        href="/"
+        href="${import.meta.env.BASE_URL}"
         data-link
         class="inline-block mt-6 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >홈으로</a
